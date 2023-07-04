@@ -30,8 +30,12 @@ const VideoElem = ({ track }: { track: MediaStreamTrack }) => {
   }, [track]);
 
   return (
-    <div className="aspect-video overflow-hidden bg-white w-fit rounded-md">
-      <video ref={videoRef} autoPlay />
+    <div className="aspect-video relative overflow-hidden bg-white w-96 rounded-md ">
+      <video
+        className="absolute w-full top-1/2 -translate-y-1/2"
+        ref={videoRef}
+        autoPlay
+      />
     </div>
   );
 };

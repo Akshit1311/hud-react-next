@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@huddle01/react':
+    specifier: link:../../../DAO/sdk/react
+    version: link:../../../DAO/sdk/react
   '@types/node':
     specifier: 20.3.2
     version: 20.3.2
