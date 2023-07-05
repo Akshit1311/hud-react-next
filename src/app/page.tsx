@@ -11,6 +11,7 @@ import {
   usePeers,
   useRoom,
   useVideo,
+  useEventListener,
 } from "@huddle01/react/hooks";
 import AudioElem from "./components/AudioElem";
 
@@ -20,7 +21,7 @@ export default function Home() {
 
   // react
   const { roomState, initialize } = useHuddle01();
-  const { joinLobby, leaveLobby } = useLobby();
+  const { joinLobby, leaveLobby, isLobbyJoined } = useLobby();
   const { joinRoom, leaveRoom } = useRoom();
   const {
     fetchAudioStream,
@@ -50,9 +51,17 @@ export default function Home() {
       videoRef.current.srcObject = videoStream;
   }, [videoStream]);
 
+  useEventListener("app:initialized", () => {
+    console.log("Initted successfullty!");
+  });
+
+  useEventListener("app:cam-on", (vStream) => {
+    console.log("Cam on successfull!", vStream);
+  });
+
   useEffect(() => {
-    console.log({ peers });
-  }, [peers]);
+    console.log({ isLobbyJoined });
+  }, [isLobbyJoined]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
@@ -63,9 +72,6 @@ export default function Home() {
             {roomState}
           </code>
         </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          {/* <Button onClick={sayHello}>SayHello</Button> */}
-        </div>
       </div>
 
       <div className="grid gap-3 place-items-center">
@@ -94,7 +100,7 @@ export default function Home() {
           <Button
             disabled={!initialize.isCallable}
             onClick={() => {
-              initialize("pSNb4vwvAz7bbzQdVYCpHWHPO-BTV2oz");
+              initialize("KL1r3E1yHfcrRbXsT4mcE-3mK60Yc3YR");
             }}
           >
             initialize()
@@ -102,7 +108,7 @@ export default function Home() {
           <Button
             disabled={!joinLobby.isCallable}
             onClick={() => {
-              joinLobby("ngo-tmvu-oxw");
+              joinLobby("fpd-gzrx-xio");
             }}
           >
             joinLobby()
