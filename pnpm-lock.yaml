@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@huddle01/react':
-    specifier: 0.0.13-beta.1
-    version: 0.0.13-beta.1
+    specifier: 0.0.13-beta.2
+    version: 0.0.13-beta.2
   '@types/node':
     specifier: 20.3.2
     version: 20.3.2
@@ -104,10 +104,10 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: false
 
-  /@huddle01/react@0.0.13-beta.1:
-    resolution: {integrity: sha512-Q1AvyrDmlCyCl16+UZG1RT2Wy6jjRTuzL2pV6r4XmoZfs8LClhEwflrdfT81wasFEtPfwtlpiw14rsUYrse9mA==}
+  /@huddle01/react@0.0.13-beta.2:
+    resolution: {integrity: sha512-Ehgi5A1Om23DEY5Sl4du9fld76ON7xjX31FPRI0l8fd7JL/qw0Y+AwZspmgCQxdNyTRfSskp/IKGyLhfG6ZBDw==}
     dependencies:
-      '@huddle01/web-core': 0.0.15-beta.1
+      '@huddle01/web-core': 0.0.15-beta.2
       jotai: 2.2.2(react@18.2.0)
       react: 18.2.0
       ws: 8.13.0
@@ -118,8 +118,8 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@huddle01/web-core@0.0.15-beta.1:
-    resolution: {integrity: sha512-Kl4R9iF+xWHJlT7iDiQg+H5xpdbgZEFwJrlrl/VcJwVXis3pLnAAWCnFf4c/ITGIA62L2/uZA7GVPqKB9x9m4Q==}
+  /@huddle01/web-core@0.0.15-beta.2:
+    resolution: {integrity: sha512-+mkID0SKt99AWcnVTVXngTnIFh/SBEDXVRqsdlvOr3LmM7WuWWdmV9ZfrK2KahrRbJKDkGmEQrqop+JHltRg0A==}
     dependencies:
       axios: 1.4.0
       mediasoup-client: 3.6.93

@@ -120,7 +120,7 @@ export default function Home() {
           <Button
             disabled={!joinLobby.isCallable}
             onClick={() => {
-              // joinLobby("zwp-qjkc-cbv");
+              // joinLobby("bui-itha-bta");
               joinLobby("fpd-gzrx-xio"); // Prod
             }}
           >
@@ -152,7 +152,7 @@ export default function Home() {
             disabled={!fetchAudioStream.isCallable}
             onClick={async () => {
               const fetchedStream = await fetchAudioStream(
-                micDevices[0].deviceId
+                micDevices[0]?.deviceId
               );
               console.log({ fetchedStream });
             }}
@@ -200,7 +200,7 @@ export default function Home() {
             disabled={!fetchVideoStream.isCallable}
             onClick={async () => {
               const fetchedStream = await fetchVideoStream(
-                camDevices[0].deviceId
+                camDevices[0]?.deviceId
               );
               console.log({ fetchedStream });
             }}
