@@ -12,15 +12,22 @@ import {
   useRoom,
   useVideo,
   useEventListener,
+  useAcl,
 } from "@huddle01/react/hooks";
+
+import { useDisplayName } from "@huddle01/react/app-utils";
 import AudioElem from "./components/AudioElem";
 
 export default function Home() {
+  // state
+  const [peerId, setPeerId] = useState("");
+  const [dName, setDName] = useState("");
+
   // refs
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // react
-  const { roomState, initialize } = useHuddle01();
+  const { roomState, initialize, me } = useHuddle01();
   const { joinLobby, leaveLobby, isLobbyJoined } = useLobby();
   const { joinRoom, leaveRoom } = useRoom();
   const {
@@ -29,6 +36,8 @@ export default function Home() {
     produceAudio,
     stopProducingAudio,
     stream: audioStream,
+    micDevices,
+    enumerateMicDevices,
   } = useAudio();
   const {
     produceVideo,
@@ -36,8 +45,12 @@ export default function Home() {
     stopVideoStream,
     stopProducingVideo,
     stream: videoStream,
+    camDevices,
+    enumerateCamDevices,
   } = useVideo();
   const { peers } = usePeers();
+
+  const { changePeerRole } = useAcl();
 
   const COLORS: { [key in typeof roomState]: string } = {
     IDLE: "text-red-500",
@@ -51,17 +64,14 @@ export default function Home() {
       videoRef.current.srcObject = videoStream;
   }, [videoStream]);
 
-  useEventListener("app:initialized", () => {
-    console.log("Initted successfullty!");
+  useEventListener("app:mic-on", () => {
+    console.log("app:mice-on", { audioStream });
+  });
+  useEventListener("room:me-role-update", (role) => {
+    console.log("room:me-role-update", { role });
   });
 
-  useEventListener("app:cam-on", (vStream) => {
-    console.log("Cam on successfull!", vStream);
-  });
-
-  useEffect(() => {
-    console.log({ isLobbyJoined });
-  }, [isLobbyJoined]);
+  const { setDisplayName } = useDisplayName();
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
@@ -75,7 +85,8 @@ export default function Home() {
       </div>
 
       <div className="grid gap-3 place-items-center">
-        Peers: {JSON.stringify(peers)}
+        <div>Peers: {JSON.stringify(peers)}</div>
+        <div>Me: {JSON.stringify(me)}</div>
         <div className="relative bg-zinc-800 aspect-video rounded-lg w-96 overflow-hidden">
           <video
             className="absolute w-full top-1/2 -translate-y-1/2"
@@ -86,10 +97,10 @@ export default function Home() {
         </div>
         <div className=" flex gap-3">
           {Object.values(peers).map(({ cam, peerId }, i) => (
-            <>{cam && <VideoElem key={peerId} track={cam} />}</>
+            <>{cam && <VideoElem key={`cam-${peerId}`} track={cam} />}</>
           ))}
           {Object.values(peers).map(({ mic, peerId }, i) => (
-            <>{mic && <AudioElem key={peerId} track={mic} />}</>
+            <>{mic && <AudioElem key={`mic-${peerId}`} track={mic} />}</>
           ))}
         </div>
       </div>
@@ -100,7 +111,8 @@ export default function Home() {
           <Button
             disabled={!initialize.isCallable}
             onClick={() => {
-              initialize("KL1r3E1yHfcrRbXsT4mcE-3mK60Yc3YR");
+              // initialize("FZH_PxAeQNgac-tWxjRJPWHBs_uuMSRw");
+              initialize("KL1r3E1yHfcrRbXsT4mcE-3mK60Yc3YR"); // Prod
             }}
           >
             initialize()
@@ -108,7 +120,8 @@ export default function Home() {
           <Button
             disabled={!joinLobby.isCallable}
             onClick={() => {
-              joinLobby("fpd-gzrx-xio");
+              // joinLobby("zwp-qjkc-cbv");
+              joinLobby("fpd-gzrx-xio"); // Prod
             }}
           >
             joinLobby()
@@ -127,9 +140,21 @@ export default function Home() {
         <div>Audio</div>
         <div className="flex gap-3">
           <Button
+            disabled={!enumerateMicDevices.isCallable}
+            onClick={async () => {
+              const enumMicDevices = await enumerateMicDevices();
+              console.log({ enumMicDevices });
+            }}
+          >
+            enumerateMicDevices()
+          </Button>
+          <Button
             disabled={!fetchAudioStream.isCallable}
             onClick={async () => {
-              fetchAudioStream();
+              const fetchedStream = await fetchAudioStream(
+                micDevices[0].deviceId
+              );
+              console.log({ fetchedStream });
             }}
           >
             fetchAudioStream()
@@ -162,8 +187,23 @@ export default function Home() {
         <div>Video</div>
         <div className="flex gap-3">
           <Button
+            disabled={!enumerateCamDevices.isCallable}
+            onClick={async () => {
+              const enumCamDevices = await enumerateCamDevices();
+              console.log({ enumCamDevices });
+            }}
+          >
+            enumerateCamDevices()
+          </Button>
+
+          <Button
             disabled={!fetchVideoStream.isCallable}
-            onClick={fetchVideoStream}
+            onClick={async () => {
+              const fetchedStream = await fetchVideoStream(
+                camDevices[0].deviceId
+              );
+              console.log({ fetchedStream });
+            }}
           >
             fetchVideoStream()
           </Button>
@@ -187,6 +227,46 @@ export default function Home() {
             onClick={stopProducingVideo}
           >
             stopProducingVideo()
+          </Button>
+        </div>
+        <div>ACL</div>
+        <div className="flex gap-3">
+          <input
+            type="text"
+            value={peerId}
+            placeholder="Peer ID"
+            onChange={(e) => setPeerId(e.target.value)}
+            className="px-4 rounded-lg bg-transparent"
+          />
+
+          <Button
+            disabled={!changePeerRole.isCallable}
+            onClick={() => changePeerRole(peerId, "host")}
+          >
+            changePeerRole(host)
+          </Button>
+          <Button
+            disabled={!changePeerRole.isCallable}
+            onClick={() => changePeerRole(peerId, "peer")}
+          >
+            changePeerRole(peer)
+          </Button>
+        </div>
+        <div>Display Name</div>
+        <div className="flex gap-3">
+          <input
+            type="text"
+            value={dName}
+            placeholder="Display Name"
+            onChange={(e) => setDName(e.target.value)}
+            className="px-4 rounded-lg bg-transparent"
+          />
+
+          <Button
+            disabled={!setDisplayName.isCallable}
+            onClick={() => setDisplayName(dName)}
+          >
+            setDisplayName()
           </Button>
         </div>
       </div>
