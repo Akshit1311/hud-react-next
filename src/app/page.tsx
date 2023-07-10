@@ -17,11 +17,14 @@ import {
 
 import { useDisplayName } from "@huddle01/react/app-utils";
 import AudioElem from "./components/AudioElem";
+import Input from "./components/Input";
 
 export default function Home() {
   // state
   const [peerId, setPeerId] = useState("");
   const [dName, setDName] = useState("");
+  const [projectId, setProjectId] = useState("");
+  const [roomId, setRoomId] = useState("");
 
   // refs
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -73,6 +76,14 @@ export default function Home() {
 
   const { setDisplayName } = useDisplayName();
 
+  useEffect(() => {
+    const localRoomId = localStorage.getItem("roomId");
+    const localProjectId = localStorage.getItem("projectId");
+
+    setRoomId(localRoomId || "");
+    setProjectId(localProjectId || "");
+  }, []);
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
@@ -106,13 +117,33 @@ export default function Home() {
       </div>
 
       <div className="">
+        <Input
+          type="text"
+          placeholder="Project ID"
+          value={projectId}
+          onChange={(e) => {
+            localStorage.setItem("projectId", e.target.value);
+            setProjectId(e.target.value);
+          }}
+        />
+        <Input
+          type="text"
+          value={roomId}
+          placeholder="Room ID "
+          onChange={(e) => {
+            localStorage.setItem("roomId", e.target.value);
+            setRoomId(e.target.value);
+          }}
+        />
+
         <div>Room</div>
         <div className="flex gap-3  w-full">
           <Button
             disabled={!initialize.isCallable}
             onClick={() => {
+              // initialize(projectId);
               // initialize("FZH_PxAeQNgac-tWxjRJPWHBs_uuMSRw");
-              initialize("KL1r3E1yHfcrRbXsT4mcE-3mK60Yc3YR"); // Prod
+              initialize("pSNb4vwvAz7bbzQdVYCpHWHPO-BTV2oz"); // Prod
             }}
           >
             initialize()
@@ -120,8 +151,9 @@ export default function Home() {
           <Button
             disabled={!joinLobby.isCallable}
             onClick={() => {
+              // joinLobby(roomId);
               // joinLobby("bui-itha-bta");
-              joinLobby("fpd-gzrx-xio"); // Prod
+              joinLobby("wvv-nagt-lrq"); // Prod
             }}
           >
             joinLobby()
@@ -231,12 +263,11 @@ export default function Home() {
         </div>
         <div>ACL</div>
         <div className="flex gap-3">
-          <input
+          <Input
             type="text"
             value={peerId}
             placeholder="Peer ID"
             onChange={(e) => setPeerId(e.target.value)}
-            className="px-4 rounded-lg bg-transparent"
           />
 
           <Button
