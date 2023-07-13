@@ -15,7 +15,7 @@ import {
   useAcl,
 } from "@huddle01/react/hooks";
 
-import { useDisplayName } from "@huddle01/react/app-utils";
+import { useAppUtils } from "@huddle01/react/app-utils";
 import AudioElem from "./components/AudioElem";
 import Input from "./components/Input";
 
@@ -25,6 +25,8 @@ export default function Home() {
   const [dName, setDName] = useState("");
   const [projectId, setProjectId] = useState("");
   const [roomId, setRoomId] = useState("");
+  const [avatarLink, setAvatarLink] = useState("");
+  const [peerIdToKick, setPeerIdToKick] = useState("");
 
   // refs
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -41,6 +43,7 @@ export default function Home() {
     stream: audioStream,
     micDevices,
     enumerateMicDevices,
+    isAudioOn,
   } = useAudio();
   const {
     produceVideo,
@@ -50,16 +53,21 @@ export default function Home() {
     stream: videoStream,
     camDevices,
     enumerateCamDevices,
+    isVideoOn,
   } = useVideo();
   const { peers } = usePeers();
 
-  const { changePeerRole } = useAcl();
+  const { changePeerRole, kickPeer } = useAcl();
 
   const COLORS: { [key in typeof roomState]: string } = {
     IDLE: "text-red-500",
     INIT: "text-pink-500",
     LOBBY: "text-yellow-500",
     ROOM: "text-green-500",
+  };
+  const MEDIA_COLORS = {
+    false: "text-red-500",
+    true: "text-green-500",
   };
 
   useEffect(() => {
@@ -74,7 +82,11 @@ export default function Home() {
     console.log("room:me-role-update", { role });
   });
 
-  const { setDisplayName } = useDisplayName();
+  useEventListener("room:data-received", (data) => {
+    console.log("Data recvvvvvved", { data });
+  });
+
+  const { setDisplayName, changeAvatarUrl, sendData } = useAppUtils();
 
   useEffect(() => {
     const localRoomId = localStorage.getItem("roomId");
@@ -85,219 +97,268 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Room State:&nbsp;
-          <code className={`font-mono font-bold ${COLORS[roomState]}`}>
-            {roomState}
-          </code>
-        </p>
-      </div>
-
-      <div className="grid gap-3 place-items-center">
-        <div>Peers: {JSON.stringify(peers)}</div>
-        <div>Me: {JSON.stringify(me)}</div>
-        <div className="relative bg-zinc-800 aspect-video rounded-lg w-96 overflow-hidden">
-          <video
-            className="absolute w-full top-1/2 -translate-y-1/2"
-            ref={videoRef}
-            autoPlay
-          />
-          {/* <audio ref={audioRef} autoPlay className="" /> */}
-        </div>
-        <div className=" flex gap-3">
-          {Object.values(peers).map(({ cam, peerId }, i) => (
-            <>{cam && <VideoElem key={`cam-${peerId}`} track={cam} />}</>
-          ))}
-          {Object.values(peers).map(({ mic, peerId }, i) => (
-            <>{mic && <AudioElem key={`mic-${peerId}`} track={mic} />}</>
-          ))}
-        </div>
-      </div>
-
-      <div className="">
-        <Input
-          type="text"
-          placeholder="Project ID"
-          value={projectId}
-          onChange={(e) => {
-            localStorage.setItem("projectId", e.target.value);
-            setProjectId(e.target.value);
-          }}
-        />
-        <Input
-          type="text"
-          value={roomId}
-          placeholder="Room ID "
-          onChange={(e) => {
-            localStorage.setItem("roomId", e.target.value);
-            setRoomId(e.target.value);
-          }}
-        />
-
-        <div>Room</div>
-        <div className="flex gap-3  w-full">
-          <Button
-            disabled={!initialize.isCallable}
-            onClick={() => {
-              // initialize(projectId);
-              // initialize("FZH_PxAeQNgac-tWxjRJPWHBs_uuMSRw");
-              initialize("pSNb4vwvAz7bbzQdVYCpHWHPO-BTV2oz"); // Prod
-            }}
-          >
-            initialize()
-          </Button>
-          <Button
-            disabled={!joinLobby.isCallable}
-            onClick={() => {
-              // joinLobby(roomId);
-              // joinLobby("bui-itha-bta");
-              joinLobby("wvv-nagt-lrq"); // Prod
-            }}
-          >
-            joinLobby()
-          </Button>
-          <Button disabled={!joinRoom.isCallable} onClick={joinRoom}>
-            joinRoom()
-          </Button>
-          <Button disabled={!leaveLobby.isCallable} onClick={leaveLobby}>
-            leaveLobby()
-          </Button>
-          <Button disabled={!leaveRoom.isCallable} onClick={leaveRoom}>
-            leaveRoom()
-          </Button>
+    <main className="grid min-h-screen flex-col place-items-center ">
+      <div className="lg:grid-cols-3  grid w-full p-16">
+        <div className="grid gap-3 place-items-center">
+          <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
+            <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
+              Room State:&nbsp;
+              <code className={`font-mono font-bold ${COLORS[roomState]}`}>
+                {roomState}
+              </code>
+            </p>
+            <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
+              isVideoOn:&nbsp;
+              <code>{isVideoOn.toString()}</code>
+            </p>
+            <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
+              isAudioOn:&nbsp;
+              <code>{isAudioOn.toString()}</code>
+            </p>
+          </div>
+          <div>Peers: {JSON.stringify(peers)}</div>
+          <div>Me: {JSON.stringify(me)}</div>
+          <div className="relative bg-zinc-800 aspect-video rounded-lg w-96 overflow-hidden">
+            <video
+              className="absolute w-full top-1/2 -translate-y-1/2"
+              ref={videoRef}
+              autoPlay
+            />
+            {/* <audio ref={audioRef} autoPlay className="" /> */}
+          </div>
+          <div className=" flex gap-3">
+            {Object.values(peers).map(({ cam, peerId, avatarUrl }, i) => (
+              <>{cam && <VideoElem key={`cam-${peerId}`} track={cam} />}</>
+            ))}
+            {Object.values(peers).map(({ mic, peerId }, i) => (
+              <>{mic && <AudioElem key={`mic-${peerId}`} track={mic} />}</>
+            ))}
+          </div>
         </div>
 
-        <div>Audio</div>
-        <div className="flex gap-3">
-          <Button
-            disabled={!enumerateMicDevices.isCallable}
-            onClick={async () => {
-              const enumMicDevices = await enumerateMicDevices();
-              console.log({ enumMicDevices });
-            }}
-          >
-            enumerateMicDevices()
-          </Button>
-          <Button
-            disabled={!fetchAudioStream.isCallable}
-            onClick={async () => {
-              const fetchedStream = await fetchAudioStream(
-                micDevices[0]?.deviceId
-              );
-              console.log({ fetchedStream });
-            }}
-          >
-            fetchAudioStream()
-          </Button>
-          <Button
-            disabled={!produceAudio.isCallable}
-            onClick={() => {
-              audioStream && produceAudio(audioStream);
-            }}
-          >
-            produceAudio()
-          </Button>
-
-          <Button
-            disabled={!stopAudioStream.isCallable}
-            onClick={stopAudioStream}
-          >
-            stopAudioStream()
-          </Button>
-          <Button
-            disabled={!stopProducingAudio.isCallable}
-            onClick={() => {
-              stopProducingAudio();
-            }}
-          >
-            stopProducingAudio()
-          </Button>
-        </div>
-
-        <div>Video</div>
-        <div className="flex gap-3">
-          <Button
-            disabled={!enumerateCamDevices.isCallable}
-            onClick={async () => {
-              const enumCamDevices = await enumerateCamDevices();
-              console.log({ enumCamDevices });
-            }}
-          >
-            enumerateCamDevices()
-          </Button>
-
-          <Button
-            disabled={!fetchVideoStream.isCallable}
-            onClick={async () => {
-              const fetchedStream = await fetchVideoStream(
-                camDevices[0]?.deviceId
-              );
-              console.log({ fetchedStream });
-            }}
-          >
-            fetchVideoStream()
-          </Button>
-
-          <Button
-            disabled={!produceVideo.isCallable}
-            onClick={() => produceVideo(videoStream)}
-          >
-            produceVideo()
-          </Button>
-
-          <Button
-            disabled={!stopVideoStream.isCallable}
-            onClick={stopVideoStream}
-          >
-            stopVideoStream()
-          </Button>
-
-          <Button
-            disabled={!stopProducingVideo.isCallable}
-            onClick={stopProducingVideo}
-          >
-            stopProducingVideo()
-          </Button>
-        </div>
-        <div>ACL</div>
-        <div className="flex gap-3">
+        <div className="col-span-2	">
           <Input
             type="text"
-            value={peerId}
-            placeholder="Peer ID"
-            onChange={(e) => setPeerId(e.target.value)}
+            placeholder="Project ID"
+            value={projectId}
+            onChange={(e) => {
+              localStorage.setItem("projectId", e.target.value);
+              setProjectId(e.target.value);
+            }}
           />
-
-          <Button
-            disabled={!changePeerRole.isCallable}
-            onClick={() => changePeerRole(peerId, "host")}
-          >
-            changePeerRole(host)
-          </Button>
-          <Button
-            disabled={!changePeerRole.isCallable}
-            onClick={() => changePeerRole(peerId, "peer")}
-          >
-            changePeerRole(peer)
-          </Button>
-        </div>
-        <div>Display Name</div>
-        <div className="flex gap-3">
-          <input
+          <Input
             type="text"
-            value={dName}
-            placeholder="Display Name"
-            onChange={(e) => setDName(e.target.value)}
-            className="px-4 rounded-lg bg-transparent"
+            value={roomId}
+            placeholder="Room ID "
+            onChange={(e) => {
+              localStorage.setItem("roomId", e.target.value);
+              setRoomId(e.target.value);
+            }}
           />
 
+          <div>Room</div>
+          <div className="flex gap-3  w-full">
+            <Button
+              disabled={!initialize.isCallable}
+              onClick={() => {
+                // initialize(projectId);
+                // initialize("FZH_PxAeQNgac-tWxjRJPWHBs_uuMSRw");
+                initialize("pSNb4vwvAz7bbzQdVYCpHWHPO-BTV2oz"); // Prod
+              }}
+            >
+              initialize()
+            </Button>
+            <Button
+              disabled={!joinLobby.isCallable}
+              onClick={() => {
+                // joinLobby(roomId);
+                // joinLobby("bui-itha-bta");
+                joinLobby("sun-yyot-hus"); // Prod
+              }}
+            >
+              joinLobby()
+            </Button>
+            <Button disabled={!joinRoom.isCallable} onClick={joinRoom}>
+              joinRoom()
+            </Button>
+            <Button disabled={!leaveLobby.isCallable} onClick={leaveLobby}>
+              leaveLobby()
+            </Button>
+            <Button disabled={!leaveRoom.isCallable} onClick={leaveRoom}>
+              leaveRoom()
+            </Button>
+          </div>
+
+          <div>Audio</div>
+          <div className="flex gap-3">
+            <Button
+              disabled={!enumerateMicDevices.isCallable}
+              onClick={async () => {
+                const enumMicDevices = await enumerateMicDevices();
+                console.log({ enumMicDevices });
+              }}
+            >
+              enumerateMicDevices()
+            </Button>
+            <Button
+              disabled={!fetchAudioStream.isCallable}
+              onClick={async () => {
+                const fetchedStream = await fetchAudioStream(
+                  micDevices[0]?.deviceId
+                );
+                console.log({ fetchedStream });
+              }}
+            >
+              fetchAudioStream()
+            </Button>
+            <Button
+              disabled={!produceAudio.isCallable}
+              onClick={() => {
+                audioStream && produceAudio(audioStream);
+              }}
+            >
+              produceAudio()
+            </Button>
+
+            <Button
+              disabled={!stopAudioStream.isCallable}
+              onClick={stopAudioStream}
+            >
+              stopAudioStream()
+            </Button>
+            <Button
+              disabled={!stopProducingAudio.isCallable}
+              onClick={() => {
+                stopProducingAudio();
+              }}
+            >
+              stopProducingAudio()
+            </Button>
+          </div>
+
+          <div>Video</div>
+          <div className="flex gap-3">
+            <Button
+              disabled={!enumerateCamDevices.isCallable}
+              onClick={async () => {
+                const enumCamDevices = await enumerateCamDevices();
+                console.log({ enumCamDevices });
+              }}
+            >
+              enumerateCamDevices()
+            </Button>
+
+            <Button
+              disabled={!fetchVideoStream.isCallable}
+              onClick={async () => {
+                const fetchedStream = await fetchVideoStream(
+                  camDevices[0]?.deviceId
+                );
+                console.log({ fetchedStream });
+              }}
+            >
+              fetchVideoStream()
+            </Button>
+
+            <Button
+              disabled={!produceVideo.isCallable}
+              onClick={() => produceVideo(videoStream)}
+            >
+              produceVideo()
+            </Button>
+
+            <Button
+              disabled={!stopVideoStream.isCallable}
+              onClick={stopVideoStream}
+            >
+              stopVideoStream()
+            </Button>
+
+            <Button
+              disabled={!stopProducingVideo.isCallable}
+              onClick={stopProducingVideo}
+            >
+              stopProducingVideo()
+            </Button>
+          </div>
+          <div>ACL</div>
+          <div className="gap-3">
+            <Input
+              type="text"
+              value={peerId}
+              placeholder="Peer ID"
+              onChange={(e) => setPeerId(e.target.value)}
+            />
+
+            <Button
+              disabled={!changePeerRole.isCallable}
+              onClick={() => changePeerRole(peerId, "host")}
+            >
+              changePeerRole(host)
+            </Button>
+            <Button
+              disabled={!changePeerRole.isCallable}
+              onClick={() => changePeerRole(peerId, "peer")}
+            >
+              changePeerRole(peer)
+            </Button>
+
+            <Button
+              disabled={!changePeerRole.isCallable}
+              onClick={() => changePeerRole(peerId, "peer")}
+            >
+              changePeerRole(peer)
+            </Button>
+
+            <br />
+            <Input
+              type="text"
+              value={peerIdToKick}
+              placeholder="Peer ID to kick"
+              onChange={(e) => setPeerIdToKick(e.target.value)}
+            />
+
+            <Button
+              disabled={!kickPeer.isCallable}
+              onClick={() => kickPeer(peerIdToKick)}
+            >
+              kickPeer()
+            </Button>
+          </div>
+          <div>App Utils</div>
+          <div className="flex gap-3">
+            <Input
+              type="text"
+              value={dName}
+              placeholder="Display Name"
+              onChange={(e) => setDName(e.target.value)}
+            />
+
+            <Button
+              disabled={!setDisplayName.isCallable}
+              onClick={() => setDisplayName(dName)}
+            >
+              setDisplayName()
+            </Button>
+            <Input
+              type="text"
+              value={avatarLink}
+              placeholder="Avatar URL"
+              onChange={(e) => setAvatarLink(e.target.value)}
+            />
+
+            <Button
+              disabled={!changeAvatarUrl.isCallable}
+              onClick={() => changeAvatarUrl(avatarLink)}
+            >
+              changeAvatarUrl()
+            </Button>
+          </div>
           <Button
-            disabled={!setDisplayName.isCallable}
-            onClick={() => setDisplayName(dName)}
+            disabled={!sendData.isCallable}
+            onClick={() => sendData("*", { hello: "hello workrk" })}
           >
-            setDisplayName()
+            sendData()
           </Button>
         </div>
       </div>
