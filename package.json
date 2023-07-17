@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@huddle01/react": "0.0.13-beta.6",
+    "@huddle01/react": "0.0.13-beta.8",
     "@types/node": "20.3.2",
     "@types/react": "18.2.14",
     "@types/react-dom": "18.2.6",
