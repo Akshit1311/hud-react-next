@@ -34,7 +34,7 @@ export default function Home() {
   // react
   const { roomState, initialize, me } = useHuddle01();
   const { joinLobby, leaveLobby, isLobbyJoined } = useLobby();
-  const { joinRoom, leaveRoom } = useRoom();
+  const { joinRoom, leaveRoom, endRoom } = useRoom();
   const {
     fetchAudioStream,
     stopAudioStream,
@@ -162,7 +162,7 @@ export default function Home() {
               disabled={!initialize.isCallable}
               onClick={() => {
                 // initialize(projectId);
-                // initialize("FZH_PxAeQNgac-tWxjRJPWHBs_uuMSRw");
+                // initialize("D15PtB97GdphM2kMrNMRzxlpXsZOis7-");
                 initialize("pSNb4vwvAz7bbzQdVYCpHWHPO-BTV2oz"); // Prod
               }}
             >
@@ -172,7 +172,7 @@ export default function Home() {
               disabled={!joinLobby.isCallable}
               onClick={() => {
                 // joinLobby(roomId);
-                // joinLobby("bui-itha-bta");
+                // joinLobby("bys-cfnx-taf");
                 joinLobby("sun-yyot-hus"); // Prod
               }}
             >
@@ -186,6 +186,9 @@ export default function Home() {
             </Button>
             <Button disabled={!leaveRoom.isCallable} onClick={leaveRoom}>
               leaveRoom()
+            </Button>
+            <Button disabled={!endRoom.isCallable} onClick={endRoom}>
+              endRoom()
             </Button>
           </div>
 
@@ -305,9 +308,21 @@ export default function Home() {
 
             <Button
               disabled={!changePeerRole.isCallable}
-              onClick={() => changePeerRole(peerId, "peer")}
+              onClick={() => changePeerRole(peerId, "listener")}
             >
-              changePeerRole(peer)
+              changePeerRole(listener)
+            </Button>
+            <Button
+              disabled={!changePeerRole.isCallable}
+              onClick={() => changePeerRole(me.meId, "listener")}
+            >
+              changePeerRole(melistener)
+            </Button>
+            <Button
+              disabled={!changePeerRole.isCallable}
+              onClick={() => changePeerRole(peerId, "speaker")}
+            >
+              changePeerRole(speaker)
             </Button>
 
             <br />
