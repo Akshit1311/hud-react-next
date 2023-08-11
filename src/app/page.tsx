@@ -33,7 +33,7 @@ export default function Home() {
 
   // react
   const { roomState, initialize, me } = useHuddle01();
-  const { joinLobby, leaveLobby, isLobbyJoined } = useLobby();
+  const { joinLobby, leaveLobby, isLobbyJoined, previewPeers } = useLobby();
   const { joinRoom, leaveRoom, endRoom } = useRoom();
   const {
     fetchAudioStream,
@@ -95,6 +95,8 @@ export default function Home() {
     setRoomId(localRoomId || process.env.NEXT_PUBLIC_ROOM_ID || "");
     setProjectId(localProjectId || process.env.NEXT_PUBLIC_PROJECT_ID || "");
   }, []);
+
+  console.log({ previewPeers });
 
   return (
     <main className="grid min-h-screen flex-col place-items-center ">
@@ -161,9 +163,9 @@ export default function Home() {
             <Button
               disabled={!initialize.isCallable}
               onClick={() => {
-                initialize(projectId);
-                // initialize("D15PtB97GdphM2kMrNMRzxlpXsZOis7-"); // Local
-                // initialize("pSNb4vwvAz7bbzQdVYCpHWHPO-BTV2oz"); // Prod
+                // initialize(projectId);
+                // initialize("73p6-3gfkjMn5OmG6Ip_bsaM8t7ZYQqn"); // Local
+                initialize("pSNb4vwvAz7bbzQdVYCpHWHPO-BTV2oz"); // Prod
               }}
             >
               initialize()
@@ -171,9 +173,9 @@ export default function Home() {
             <Button
               disabled={!joinLobby.isCallable}
               onClick={() => {
-                joinLobby(roomId);
-                // joinLobby("bys-cfnx-taf");
-                // joinLobby("sun-yyot-hus"); // Prod
+                // joinLobby(roomId);
+                // joinLobby("kme-uqic-fnl"); //Local
+                joinLobby("sun-yyot-hus"); // Prod
               }}
             >
               joinLobby()
