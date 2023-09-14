@@ -34,7 +34,7 @@ export default function Home() {
 
   // react
   const { roomState, initialize, me } = useHuddle01();
-  const { joinLobby, leaveLobby, isLobbyJoined, previewPeers } = useLobby();
+  const { joinLobby, leaveLobby, isLobbyJoined } = useLobby();
   const { joinRoom, leaveRoom, endRoom } = useRoom();
   const {
     fetchAudioStream,
