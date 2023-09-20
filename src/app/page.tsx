@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import Button from "./components/Button";
 import { useEffect, useRef, useState } from "react";
 import VideoElem from "./components/VideoElem";
@@ -96,8 +95,6 @@ export default function Home() {
     setProjectId(localProjectId || process.env.NEXT_PUBLIC_PROJECT_ID || "");
   }, []);
 
-  console.log({ previewPeers });
-
   return (
     <main className="grid min-h-screen flex-col place-items-center ">
       <div className="lg:grid-cols-3  grid w-full p-16">
@@ -120,6 +117,7 @@ export default function Home() {
           </div>
           <div>Peers: {JSON.stringify(peers)}</div>
           <div>Me: {JSON.stringify(me)}</div>
+          <div>PreviewPeers: {JSON.stringify(previewPeers)}</div>
           <div className="relative bg-zinc-800 aspect-video rounded-lg w-96 overflow-hidden">
             <video
               className="absolute w-full top-1/2 -translate-y-1/2"
