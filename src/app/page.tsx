@@ -1,39 +1,41 @@
-"use client";
-import Image from "next/image";
-import Button from "./components/Button";
-import { useEffect, useRef, useState } from "react";
-import VideoElem from "./components/VideoElem";
+'use client';
 
+import { useEffect, useRef, useState } from 'react';
+
+import { useAppUtils } from '@huddle01/react/app-utils';
 import {
+  useAcl,
   useAudio,
+  useEventListener,
   useHuddle01,
   useLobby,
   usePeers,
   useRoom,
   useVideo,
-  useEventListener,
-  useAcl,
-} from "@huddle01/react/hooks";
+  useScreen,
+} from '@huddle01/react/hooks';
 
-import { useAppUtils } from "@huddle01/react/app-utils";
-import AudioElem from "./components/AudioElem";
-import Input from "./components/Input";
+import AudioElem from './components/AudioElem';
+import Button from './components/Button';
+import Input from './components/Input';
+import VideoElem from './components/VideoElem';
 
 export default function Home() {
   // state
-  const [peerId, setPeerId] = useState("");
-  const [dName, setDName] = useState("");
-  const [projectId, setProjectId] = useState("");
-  const [roomId, setRoomId] = useState("");
-  const [avatarLink, setAvatarLink] = useState("");
-  const [peerIdToKick, setPeerIdToKick] = useState("");
+  const [peerId, setPeerId] = useState('');
+  const [dName, setDName] = useState('');
+  const [projectId, setProjectId] = useState('');
+  const [roomId, setRoomId] = useState('');
+  const [avatarLink, setAvatarLink] = useState('');
+  const [peerIdToKick, setPeerIdToKick] = useState('');
 
   // refs
   const videoRef = useRef<HTMLVideoElement>(null);
+  const screenRef = useRef<HTMLVideoElement>(null);
 
   // react
   const { roomState, initialize, me } = useHuddle01();
-  const { joinLobby, leaveLobby, isLobbyJoined } = useLobby();
+  const { joinLobby, leaveLobby } = useLobby();
   const { joinRoom, leaveRoom } = useRoom();
   const {
     fetchAudioStream,
@@ -55,19 +57,28 @@ export default function Home() {
     enumerateCamDevices,
     isVideoOn,
   } = useVideo();
+
+  const {
+    fetchScreenShare,
+    produceScreenShare,
+    stopScreenShare,
+    stopProducingScreenShare,
+    stream: screenShareStream,
+  } = useScreen();
+
   const { peers } = usePeers();
 
   const { changePeerRole, kickPeer } = useAcl();
 
   const COLORS: { [key in typeof roomState]: string } = {
-    IDLE: "text-red-500",
-    INIT: "text-pink-500",
-    LOBBY: "text-yellow-500",
-    ROOM: "text-green-500",
+    IDLE: 'text-red-500',
+    INIT: 'text-pink-500',
+    LOBBY: 'text-yellow-500',
+    ROOM: 'text-green-500',
   };
   const MEDIA_COLORS = {
-    false: "text-red-500",
-    true: "text-green-500",
+    false: 'text-red-500',
+    true: 'text-green-500',
   };
 
   useEffect(() => {
@@ -75,25 +86,30 @@ export default function Home() {
       videoRef.current.srcObject = videoStream;
   }, [videoStream]);
 
-  useEventListener("app:mic-on", () => {
-    console.log("app:mice-on", { audioStream });
+  useEventListener('app:mic-on', () => {
+    console.log('app:mice-on', { audioStream });
   });
-  useEventListener("room:me-role-update", (role) => {
-    console.log("room:me-role-update", { role });
+  useEventListener('room:me-role-update', role => {
+    console.log('room:me-role-update', { role });
   });
 
-  useEventListener("room:data-received", (data) => {
-    console.log("Data recvvvvvved", { data });
+  useEventListener('room:data-received', data => {
+    console.log('Data recvvvvvved', { data });
   });
+
+  useEffect(() => {
+    if (screenShareStream && screenRef.current)
+      screenRef.current.srcObject = screenShareStream;
+  }, [screenShareStream]);
 
   const { setDisplayName, changeAvatarUrl, sendData } = useAppUtils();
 
   useEffect(() => {
-    const localRoomId = localStorage.getItem("roomId");
-    const localProjectId = localStorage.getItem("projectId");
+    const localRoomId = localStorage.getItem('roomId');
+    const localProjectId = localStorage.getItem('projectId');
 
-    setRoomId(localRoomId || "");
-    setProjectId(localProjectId || "");
+    setRoomId(localRoomId || '');
+    setProjectId(localProjectId || '');
   }, []);
 
   return (
@@ -111,6 +127,7 @@ export default function Home() {
               isVideoOn:&nbsp;
               <code>{isVideoOn.toString()}</code>
             </p>
+            ``
             <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
               isAudioOn:&nbsp;
               <code>{isAudioOn.toString()}</code>
@@ -124,12 +141,37 @@ export default function Home() {
               ref={videoRef}
               autoPlay
             />
-            {/* <audio ref={audioRef} autoPlay className="" /> */}
           </div>
+          <span> Video </span>
+          <div className="relative bg-zinc-800 aspect-video rounded-lg w-96 overflow-hidden">
+            <video
+              className="absolute w-full top-1/2 -translate-y-1/2"
+              ref={screenRef}
+              autoPlay
+            />
+          </div>
+          <span> Screen share </span>
           <div className=" flex gap-3">
-            {Object.values(peers).map(({ cam, peerId, avatarUrl }, i) => (
-              <>{cam && <VideoElem key={`cam-${peerId}`} track={cam} />}</>
-            ))}
+            {Object.values(peers).map(
+              ({ cam, peerId, avatarUrl, screenVideo, displayName }, i) => (
+                <>
+                  {screenVideo && (
+                    <VideoElem
+                      key={`screen-${peerId}`}
+                      track={screenVideo}
+                      displayName={displayName}
+                    />
+                  )}
+                  {cam && (
+                    <VideoElem
+                      key={`cam-${peerId}`}
+                      track={cam}
+                      displayName={displayName}
+                    />
+                  )}
+                </>
+              )
+            )}
             {Object.values(peers).map(({ mic, peerId }, i) => (
               <>{mic && <AudioElem key={`mic-${peerId}`} track={mic} />}</>
             ))}
@@ -141,8 +183,8 @@ export default function Home() {
             type="text"
             placeholder="Project ID"
             value={projectId}
-            onChange={(e) => {
-              localStorage.setItem("projectId", e.target.value);
+            onChange={e => {
+              localStorage.setItem('projectId', e.target.value);
               setProjectId(e.target.value);
             }}
           />
@@ -150,8 +192,8 @@ export default function Home() {
             type="text"
             value={roomId}
             placeholder="Room ID "
-            onChange={(e) => {
-              localStorage.setItem("roomId", e.target.value);
+            onChange={e => {
+              localStorage.setItem('roomId', e.target.value);
               setRoomId(e.target.value);
             }}
           />
@@ -163,7 +205,7 @@ export default function Home() {
               onClick={() => {
                 // initialize(projectId);
                 // initialize("FZH_PxAeQNgac-tWxjRJPWHBs_uuMSRw");
-                initialize("pSNb4vwvAz7bbzQdVYCpHWHPO-BTV2oz"); // Prod
+                initialize('TxG-OolMwGeCoZPzX660e65wwuU2MP83'); // Prod
               }}
             >
               initialize()
@@ -173,7 +215,7 @@ export default function Home() {
               onClick={() => {
                 // joinLobby(roomId);
                 // joinLobby("bui-itha-bta");
-                joinLobby("sun-yyot-hus"); // Prod
+                joinLobby('nhc-jwta-eed'); // Prod
               }}
             >
               joinLobby()
@@ -281,31 +323,61 @@ export default function Home() {
               stopProducingVideo()
             </Button>
           </div>
+          <div>Screen Share</div>
+          <div className="flex gap-3">
+            <Button
+              disabled={!fetchScreenShare.isCallable}
+              onClick={fetchScreenShare}
+            >
+              fetchScreenShare()
+            </Button>
+            <Button
+              disabled={!produceScreenShare.isCallable}
+              onClick={() => {
+                produceScreenShare(screenShareStream);
+              }}
+            >
+              produceScreenShareVideo()
+            </Button>
+            <Button
+              disabled={!stopScreenShare.isCallable}
+              onClick={stopScreenShare}
+            >
+              stopScreenShare()
+            </Button>
+
+            <Button
+              disabled={!stopProducingScreenShare.isCallable}
+              onClick={stopProducingScreenShare}
+            >
+              stopProducingScreenShare()
+            </Button>
+          </div>
           <div>ACL</div>
           <div className="gap-3">
             <Input
               type="text"
               value={peerId}
               placeholder="Peer ID"
-              onChange={(e) => setPeerId(e.target.value)}
+              onChange={e => setPeerId(e.target.value)}
             />
 
             <Button
               disabled={!changePeerRole.isCallable}
-              onClick={() => changePeerRole(peerId, "host")}
+              onClick={() => changePeerRole(peerId, 'host')}
             >
               changePeerRole(host)
             </Button>
             <Button
               disabled={!changePeerRole.isCallable}
-              onClick={() => changePeerRole(peerId, "peer")}
+              onClick={() => changePeerRole(peerId, 'peer')}
             >
               changePeerRole(peer)
             </Button>
 
             <Button
               disabled={!changePeerRole.isCallable}
-              onClick={() => changePeerRole(peerId, "peer")}
+              onClick={() => changePeerRole(peerId, 'peer')}
             >
               changePeerRole(peer)
             </Button>
@@ -315,7 +387,7 @@ export default function Home() {
               type="text"
               value={peerIdToKick}
               placeholder="Peer ID to kick"
-              onChange={(e) => setPeerIdToKick(e.target.value)}
+              onChange={e => setPeerIdToKick(e.target.value)}
             />
 
             <Button
@@ -331,7 +403,7 @@ export default function Home() {
               type="text"
               value={dName}
               placeholder="Display Name"
-              onChange={(e) => setDName(e.target.value)}
+              onChange={e => setDName(e.target.value)}
             />
 
             <Button
@@ -344,7 +416,7 @@ export default function Home() {
               type="text"
               value={avatarLink}
               placeholder="Avatar URL"
-              onChange={(e) => setAvatarLink(e.target.value)}
+              onChange={e => setAvatarLink(e.target.value)}
             />
 
             <Button
@@ -356,7 +428,7 @@ export default function Home() {
           </div>
           <Button
             disabled={!sendData.isCallable}
-            onClick={() => sendData("*", { hello: "hello workrk" })}
+            onClick={() => sendData('*', { hello: 'hello workrk' })}
           >
             sendData()
           </Button>
