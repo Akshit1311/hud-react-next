@@ -12,7 +12,7 @@ import {
   usePeers,
   useRoom,
   useVideo,
-  useScreen,
+  useScreenShare,
 } from '@huddle01/react/hooks';
 
 import AudioElem from './components/AudioElem';
@@ -64,7 +64,7 @@ export default function Home() {
     stopScreenShare,
     stopProducingScreenShare,
     stream: screenShareStream,
-  } = useScreen();
+  } = useScreenShare();
 
   const { peers } = usePeers();
 
@@ -148,18 +148,26 @@ export default function Home() {
               className="absolute w-full top-1/2 -translate-y-1/2"
               ref={screenRef}
               autoPlay
+              muted
             />
           </div>
           <span> Screen share </span>
           <div className=" flex gap-3">
             {Object.values(peers).map(
-              ({ cam, peerId, avatarUrl, screenVideo, displayName }, i) => (
+              ({ cam, peerId, avatarUrl, shareVideo, shareAudio, displayName }, i) => (
                 <>
-                  {screenVideo && (
+                  {shareVideo && (
                     <VideoElem
-                      key={`screen-${peerId}`}
-                      track={screenVideo}
+                      key={`screen-video-${peerId}`}
+                      track={shareVideo}
                       displayName={displayName}
+                    />
+                  )}
+                   {shareAudio && (
+                    <AudioElem
+                      key={`screen-audio-${peerId}`}
+                      track={shareAudio}
+                      
                     />
                   )}
                   {cam && (
@@ -215,7 +223,7 @@ export default function Home() {
               onClick={() => {
                 // joinLobby(roomId);
                 // joinLobby("bui-itha-bta");
-                joinLobby('nhc-jwta-eed'); // Prod
+                joinLobby('fqe-osln-cid'); // Prod
               }}
             >
               joinLobby()
