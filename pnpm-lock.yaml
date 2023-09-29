@@ -6,7 +6,7 @@ settings:
 
 dependencies:
   '@huddle01/react':
-    specifier: ^0.0.15
+    specifier: link:../../DAO/sdk/react
     version: 0.0.15(@types/react@18.2.14)
   '@types/node':
     specifier: 20.3.2

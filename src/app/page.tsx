@@ -24,6 +24,7 @@ export default function Home() {
   const [dName, setDName] = useState("");
   const [projectId, setProjectId] = useState("");
   const [roomId, setRoomId] = useState("");
+  const [accessToken, setAccessToken] = useState("");
   const [avatarLink, setAvatarLink] = useState("");
   const [peerIdToKick, setPeerIdToKick] = useState("");
 
@@ -33,7 +34,7 @@ export default function Home() {
   // react
   const { roomState, initialize, me } = useHuddle01();
   const { joinLobby, leaveLobby, isLobbyJoined, previewPeers } = useLobby();
-  const { joinRoom, leaveRoom, endRoom } = useRoom();
+  const { joinRoom, leaveRoom, endRoom, lobbyPeers } = useRoom();
   const {
     fetchAudioStream,
     stopAudioStream,
@@ -56,7 +57,8 @@ export default function Home() {
   } = useVideo();
   const { peers } = usePeers();
 
-  const { changePeerRole, kickPeer } = useAcl();
+  const { changePeerRole, kickPeer, admitPeer, denyPeer, changeRoomControls } =
+    useAcl();
 
   const COLORS: { [key in typeof roomState]: string } = {
     IDLE: "text-red-500",
@@ -155,15 +157,24 @@ export default function Home() {
               setRoomId(e.target.value);
             }}
           />
+          <Input
+            type="text"
+            value={accessToken}
+            placeholder="Access Token"
+            onChange={(e) => {
+              localStorage.setItem("accessToken", e.target.value);
+              setAccessToken(e.target.value);
+            }}
+          />
 
           <div>Room</div>
           <div className="flex gap-3  w-full">
             <Button
               disabled={!initialize.isCallable}
               onClick={() => {
-                // initialize(projectId);
+                initialize(projectId);
                 // initialize("73p6-3gfkjMn5OmG6Ip_bsaM8t7ZYQqn"); // Local
-                initialize("pSNb4vwvAz7bbzQdVYCpHWHPO-BTV2oz"); // Prod
+                // initialize("pSNb4vwvAz7bbzQdVYCpHWHPO-BTV2oz"); // Prod
               }}
             >
               initialize()
@@ -171,9 +182,9 @@ export default function Home() {
             <Button
               disabled={!joinLobby.isCallable}
               onClick={() => {
-                // joinLobby(roomId);
-                // joinLobby("kme-uqic-fnl"); //Local
-                joinLobby("sun-yyot-hus"); // Prod
+                if (accessToken) joinLobby(roomId, accessToken);
+                else joinLobby(roomId); //Local
+                // joinLobby("sun-yyot-hus"); // Prod
               }}
             >
               joinLobby()
@@ -369,12 +380,63 @@ export default function Home() {
               changeAvatarUrl()
             </Button>
           </div>
+
+          <div className="flex gap-3 my-3">
+            <Button
+              disabled={!changeRoomControls.isCallable}
+              onClick={() => changeRoomControls("roomLocked", true)}
+            >
+              lockRoom()
+            </Button>
+            <Button
+              disabled={!changeRoomControls.isCallable}
+              onClick={() => changeRoomControls("roomLocked", false)}
+            >
+              unlockRoom()
+            </Button>
+          </div>
+
           <Button
             disabled={!sendData.isCallable}
             onClick={() => sendData("*", { hello: "hello workrk" })}
           >
             sendData()
           </Button>
+        </div>
+
+        <div>{JSON.stringify(lobbyPeers)}</div>
+
+        <div>
+          <Button
+            disabled={!admitPeer.isCallable}
+            onClick={() => admitPeer(lobbyPeers.map(({ peerId }) => peerId))}
+          >
+            Admit All
+          </Button>
+          <Button
+            disabled={!denyPeer.isCallable}
+            onClick={() => denyPeer(lobbyPeers.map(({ peerId }) => peerId))}
+          >
+            Deny All
+          </Button>
+          {lobbyPeers.map(({ displayName, walletAddress, peerId }) => {
+            return (
+              <div key={peerId}>
+                <Button
+                  disabled={!admitPeer.isCallable}
+                  onClick={() => admitPeer([peerId])}
+                >
+                  Admit Peer
+                </Button>
+                <Button
+                  disabled={!denyPeer.isCallable}
+                  onClick={() => denyPeer([peerId])}
+                >
+                  Deny Peer
+                </Button>
+              </div>
+            );
+          })}
         </div>
       </div>
     </main>
