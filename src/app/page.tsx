@@ -1,22 +1,23 @@
 "use client";
-import Button from "./components/Button";
 import { useEffect, useRef, useState } from "react";
-import VideoElem from "./components/VideoElem";
 
+import { useAppUtils } from "@huddle01/react/app-utils";
 import {
+  useAcl,
   useAudio,
+  useEventListener,
   useHuddle01,
   useLobby,
   usePeers,
   useRoom,
   useVideo,
-  useEventListener,
-  useAcl,
+  useScreenShare,
 } from "@huddle01/react/hooks";
 
-import { useAppUtils } from "@huddle01/react/app-utils";
 import AudioElem from "./components/AudioElem";
+import Button from "./components/Button";
 import Input from "./components/Input";
+import VideoElem from "./components/VideoElem";
 
 export default function Home() {
   // state
@@ -30,6 +31,7 @@ export default function Home() {
 
   // refs
   const videoRef = useRef<HTMLVideoElement>(null);
+  const screenRef = useRef<HTMLVideoElement>(null);
 
   // react
   const { roomState, initialize, me } = useHuddle01();
@@ -55,6 +57,15 @@ export default function Home() {
     enumerateCamDevices,
     isVideoOn,
   } = useVideo();
+
+  const {
+    fetchScreenShare,
+    produceScreenShare,
+    stopScreenShare,
+    stopProducingScreenShare,
+    stream: screenShareStream,
+  } = useScreenShare();
+
   const { peers } = usePeers();
 
   const { changePeerRole, kickPeer, admitPeer, denyPeer, changeRoomControls } =
@@ -87,6 +98,11 @@ export default function Home() {
     console.log("Data recvvvvvved", { data });
   });
 
+  useEffect(() => {
+    if (screenShareStream && screenRef.current)
+      screenRef.current.srcObject = screenShareStream;
+  }, [screenShareStream]);
+
   const { setDisplayName, changeAvatarUrl, sendData } = useAppUtils();
 
   useEffect(() => {
@@ -99,45 +115,75 @@ export default function Home() {
 
   return (
     <main className="grid min-h-screen flex-col place-items-center ">
-      <div className="lg:grid-cols-3  grid w-full p-16">
-        <div className="grid gap-3 place-items-center">
-          <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-            <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-              Room State:&nbsp;
-              <code className={`font-mono font-bold ${COLORS[roomState]}`}>
-                {roomState}
-              </code>
-            </p>
-            <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-              isVideoOn:&nbsp;
-              <code>{isVideoOn.toString()}</code>
-            </p>
-            <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-              isAudioOn:&nbsp;
-              <code>{isAudioOn.toString()}</code>
-            </p>
-          </div>
-          <div>Peers: {JSON.stringify(peers)}</div>
-          <div>Me: {JSON.stringify(me)}</div>
-          <div>PreviewPeers: {JSON.stringify(previewPeers)}</div>
-          <div className="relative bg-zinc-800 aspect-video rounded-lg w-96 overflow-hidden">
-            <video
-              className="absolute w-full top-1/2 -translate-y-1/2"
-              ref={videoRef}
-              autoPlay
-            />
-            {/* <audio ref={audioRef} autoPlay className="" /> */}
-          </div>
-          <div className=" flex gap-3">
-            {Object.values(peers).map(({ cam, peerId, avatarUrl }, i) => (
-              <>{cam && <VideoElem key={`cam-${peerId}`} track={cam} />}</>
-            ))}
-            {Object.values(peers).map(({ mic, peerId }, i) => (
-              <>{mic && <AudioElem key={`mic-${peerId}`} track={mic} />}</>
-            ))}
-          </div>
+      <div className="grid gap-3 place-items-center">
+        <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
+          <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
+            Room State:&nbsp;
+            <code className={`font-mono font-bold ${COLORS[roomState]}`}>
+              {roomState}
+            </code>
+          </p>
+          <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
+            isVideoOn:&nbsp;
+            <code>{isVideoOn.toString()}</code>
+          </p>
+          ``
+          <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
+            isAudioOn:&nbsp;
+            <code>{isAudioOn.toString()}</code>
+          </p>
         </div>
-
+        <div className="break-words whitespace-normal">
+          Peers: {JSON.stringify(peers)}
+        </div>
+        <div>Me: {JSON.stringify(me)}</div>
+        <div>PreviewPeers: {JSON.stringify(previewPeers)}</div>
+        <div className="relative bg-zinc-800 aspect-video rounded-lg w-96 overflow-hidden">
+          <video
+            className="absolute w-full top-1/2 -translate-y-1/2"
+            ref={videoRef}
+            autoPlay
+          />
+        </div>
+        <span> Video </span>
+        <div className="relative bg-zinc-800 aspect-video rounded-lg w-96 overflow-hidden">
+          <video
+            className="absolute w-full top-1/2 -translate-y-1/2"
+            ref={screenRef}
+            autoPlay
+            muted
+          />
+        </div>
+        <span> Screen share </span>
+        <div className=" flex gap-3">
+          {Object.values(peers).map(
+            (
+              { cam, peerId, avatarUrl, shareVideo, shareAudio, displayName },
+              i
+            ) => (
+              <>
+                {shareVideo && (
+                  <VideoElem
+                    key={`screen-video-${peerId}`}
+                    track={shareVideo}
+                  />
+                )}
+                {shareAudio && (
+                  <AudioElem
+                    key={`screen-audio-${peerId}`}
+                    track={shareAudio}
+                  />
+                )}
+                {cam && <VideoElem key={`cam-${peerId}`} track={cam} />}
+              </>
+            )
+          )}
+          {Object.values(peers).map(({ mic, peerId }, i) => (
+            <>{mic && <AudioElem key={`mic-${peerId}`} track={mic} />}</>
+          ))}
+        </div>
+      </div>
+      <div className="lg:grid-cols-3  grid w-full p-16">
         <div className="col-span-2	">
           <Input
             type="text"
@@ -293,6 +339,36 @@ export default function Home() {
               onClick={stopProducingVideo}
             >
               stopProducingVideo()
+            </Button>
+          </div>
+          <div>Screen Share</div>
+          <div className="flex gap-3">
+            <Button
+              disabled={!fetchScreenShare.isCallable}
+              onClick={fetchScreenShare}
+            >
+              fetchScreenShare()
+            </Button>
+            <Button
+              disabled={!produceScreenShare.isCallable}
+              onClick={() => {
+                produceScreenShare(screenShareStream);
+              }}
+            >
+              produceScreenShareVideo()
+            </Button>
+            <Button
+              disabled={!stopScreenShare.isCallable}
+              onClick={stopScreenShare}
+            >
+              stopScreenShare()
+            </Button>
+
+            <Button
+              disabled={!stopProducingScreenShare.isCallable}
+              onClick={stopProducingScreenShare}
+            >
+              stopProducingScreenShare()
             </Button>
           </div>
           <div>ACL</div>
