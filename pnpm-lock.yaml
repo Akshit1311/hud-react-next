@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@huddle01/react':
-    specifier: ^0.0.16
-    version: 0.0.16(@types/react@18.2.14)
+    specifier: ^0.0.17
+    version: 0.0.17(@types/react@18.2.14)
   '@types/node':
     specifier: 20.3.2
     version: 20.3.2
@@ -101,10 +101,10 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: false
 
-  /@huddle01/react@0.0.16(@types/react@18.2.14):
-    resolution: {integrity: sha512-4Rv/ZjViYyXVcq8HpLxsDxAt784JPfZaO0mDoNsnA3FoONkJq17zHNXV1xypJGTJieFOFCJd928MLoC9eyws0Q==}
+  /@huddle01/react@0.0.17(@types/react@18.2.14):
+    resolution: {integrity: sha512-fWfBk8ld7zzU31D76xHnpGRHJ7IlWzpmhwM1Vz6A3fxIEFtT4ENxsrqQE7hd7xd8ZtCHRPxZ68nif69O71m1Ug==}
     dependencies:
-      '@huddle01/web-core': 0.0.17
+      '@huddle01/web-core': 0.0.18
       jotai: 2.4.3(@types/react@18.2.14)(react@18.2.0)
       react: 18.2.0
       ws: 8.14.2
@@ -116,8 +116,8 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@huddle01/web-core@0.0.17:
-    resolution: {integrity: sha512-75zcRO+CRI9UlP45XZOq02u9j5tQoTxprbkD2D6r4gFRN0qt/4ymcBa/PEBot00S8QKmUS5UdVvqTmkzY69HbA==}
+  /@huddle01/web-core@0.0.18:
+    resolution: {integrity: sha512-YWLew+vxdFGJmUdcOzuIlLfvW/7HTtivZg3MHQ+ICNVvPSvoMjOwP/ROG+dQS9ZGnYeqWuC9//NRpxyRm8s5Sg==}
     dependencies:
       axios: 1.5.1
       mediasoup-client: 3.6.101
@@ -323,18 +323,18 @@ packages:
       tslib: 2.6.0
     dev: false
 
-  /@types/debug@4.1.9:
-    resolution: {integrity: sha512-8Hz50m2eoS56ldRlepxSBa6PWEVCtzUo/92HgLc2qTMnotJNIm7xP+UZhyWoYsyOdd5dxZ+NZLb24rsKyFs2ow==}
+  /@types/debug@4.1.10:
+    resolution: {integrity: sha512-tOSCru6s732pofZ+sMv9o4o3Zc+Sa8l3bxd/tweTQudFn06vAzb13ZX46Zi6m6EJ+RUbRTHvgQJ1gBtSgkaUYA==}
     dependencies:
-      '@types/ms': 0.7.32
+      '@types/ms': 0.7.33
     dev: false
 
   /@types/json5@0.0.29:
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
     dev: false
 
-  /@types/ms@0.7.32:
-    resolution: {integrity: sha512-xPSg0jm4mqgEkNhowKgZFBNtwoEwF6gJ4Dhww+GFpm3IgtNseHQZ5IqdNwnquZEoANxyDAKDRAdVo4Z72VvD/g==}
+  /@types/ms@0.7.33:
+    resolution: {integrity: sha512-AuHIyzR5Hea7ij0P9q7vx7xu4z0C28ucwjAZC0ja7JhINyCnOw8/DnvAPQQ9TfOlCtZAmCERKQX9+o1mgQhuOQ==}
     dev: false
 
   /@types/node@20.3.2:
@@ -1912,7 +1912,7 @@ packages:
     resolution: {integrity: sha512-EreP7qnozEUsQiS0ErpqsG55f3RIWv/PvcxDh4N2SxR+Uxgg+zGLB/+nVFVEx+4IIZZt/isK3YvxAI7Q8L7U0Q==}
     engines: {node: '>=16'}
     dependencies:
-      '@types/debug': 4.1.9
+      '@types/debug': 4.1.10
       awaitqueue: 3.0.1(supports-color@9.4.0)
       debug: 4.3.4(supports-color@9.4.0)
       events: 3.3.0
